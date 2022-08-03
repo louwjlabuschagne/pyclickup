@@ -145,6 +145,15 @@ class List(BaseModel):
 
         return new_task
 
+    def get_task(self, task_id: int) -> "Task":
+        """gets a task by id"""
+        if not self._client:
+            raise MissingClient()
+        tasks = self.get_tasks()
+        for task in tasks:
+            if task.id == task_id:
+                return task
+
 
 class Project(BaseModel):
     """project model"""
@@ -324,6 +333,7 @@ class Task(BaseModel):
         """repr"""
         return "<{}.Task[{}] '{}'>".format(LIBRARY, self.id, self.name)
 
+
     def update(
         self,
         name: str = None,  # string
@@ -362,4 +372,16 @@ class Task(BaseModel):
                 due_date if isinstance(due_date, int) else datetime_to_ts(due_date)
             )
 
-        return self._client.put(path, data=data)
+        return self._client.put(path, json=data)
+
+    def comment(self):
+        """
+        Requires v2 of API
+
+        comments on the task
+        """
+        path = "task/{}/comment".format(self.id)
+        data = {
+            "comment_text": "Task comment content",
+        }
+        self._client.post(path, json=data)
